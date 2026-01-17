@@ -81,7 +81,8 @@ func (e FSExecutor) execInstall(ctx context.Context, p plan.InstallPlan) error {
 		return nil
 	}
 
-	return dl.Fetch(ctx, artifact)
+	fmt.Println("Downloading", artifact.Name)
+	return dl.FetchWithProgress(ctx, artifact)
 }
 
 // downloadAndExtractJRE downloads and extracts the JRE archive.
@@ -94,8 +95,6 @@ func (e FSExecutor) downloadAndExtractJRE(ctx context.Context, dl downloader.HTT
 		return nil
 	}
 
-	fmt.Println("Downloading JRE:", jre.Name)
-
 	// Download JRE archive
 	artifact := downloader.Artifact{
 		Name:   jre.Name,
@@ -103,7 +102,7 @@ func (e FSExecutor) downloadAndExtractJRE(ctx context.Context, dl downloader.HTT
 		Target: jre.Target,
 	}
 
-	if err := dl.Fetch(ctx, artifact); err != nil {
+	if err := dl.FetchWithProgress(ctx, artifact); err != nil {
 		return fmt.Errorf("download JRE: %w", err)
 	}
 
@@ -220,10 +219,12 @@ func (e FSExecutor) execUpdate(ctx context.Context, p plan.UpdatePlan) error {
 		return nil
 	}
 
+	fmt.Printf("Updating %s -> %s\n", p.CurrentVersion, p.TargetVersion)
+
 	dl := downloader.HTTPDownloader{
 		Timeout: 5 * time.Minute,
 		Retries: 3,
 	}
 
-	return dl.Fetch(ctx, artifact)
+	return dl.FetchWithProgress(ctx, artifact)
 }

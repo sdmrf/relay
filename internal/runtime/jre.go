@@ -25,15 +25,29 @@ type JREArtifact struct {
 // GetBundledJREPath returns the path to the bundled java binary if it exists.
 // Returns empty string if bundled JRE is not found.
 func GetBundledJREPath(installDir string) string {
-	var javaBin string
-	if runtime.GOOS == "windows" {
-		javaBin = filepath.Join(installDir, "jre", "bin", "java.exe")
-	} else {
-		javaBin = filepath.Join(installDir, "jre", "bin", "java")
+	var candidates []string
+
+	switch runtime.GOOS {
+	case "darwin":
+		// macOS uses app bundle structure: jre/Contents/Home/bin/java
+		candidates = []string{
+			filepath.Join(installDir, "jre", "Contents", "Home", "bin", "java"),
+			filepath.Join(installDir, "jre", "bin", "java"), // fallback for non-bundle JREs
+		}
+	case "windows":
+		candidates = []string{
+			filepath.Join(installDir, "jre", "bin", "java.exe"),
+		}
+	default: // linux
+		candidates = []string{
+			filepath.Join(installDir, "jre", "bin", "java"),
+		}
 	}
 
-	if _, err := os.Stat(javaBin); err == nil {
-		return javaBin
+	for _, javaBin := range candidates {
+		if _, err := os.Stat(javaBin); err == nil {
+			return javaBin
+		}
 	}
 	return ""
 }
