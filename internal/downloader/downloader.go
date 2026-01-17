@@ -4,10 +4,10 @@ import "context"
 
 // Artifact describes a downloadable resource.
 type Artifact struct {
-	Name     string // Display name (e.g., "burpsuite.jar")
-	URL      string // Download URL
-	Checksum string // Expected checksum for verification (optional, future use)
-	Target   string // Target file path
+	Name     string
+	URL      string
+	Checksum string
+	Target   string
 }
 
 // Downloader fetches artifacts from remote sources.

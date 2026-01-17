@@ -1,9 +1,13 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
+	"time"
 
+	"github.com/sdmrf/relay/internal/downloader"
 	"github.com/sdmrf/relay/internal/plan"
 )
 
@@ -26,7 +30,7 @@ func (e FSExecutor) Execute(p plan.Plan) error {
 	}
 }
 
-// execInstall creates required directories for installation.
+// execInstall creates required directories and downloads artifacts.
 // Uses MkdirAll for idempotency - safe to run multiple times.
 func (e FSExecutor) execInstall(p plan.InstallPlan) error {
 	dirs := []string{
@@ -47,7 +51,26 @@ func (e FSExecutor) execInstall(p plan.InstallPlan) error {
 		}
 	}
 
-	return nil
+	// Download artifact
+	artifact := downloader.Artifact{
+		Name:   "burpsuite.jar",
+		URL:    burpDownloadURL(p.Edition),
+		Target: filepath.Join(p.Paths.InstallDir, "burpsuite.jar"),
+	}
+
+	if e.DryRun {
+		fmt.Println("[dry-run] download:", artifact.Name)
+		fmt.Println("[dry-run]   url:", artifact.URL)
+		fmt.Println("[dry-run]   target:", artifact.Target)
+		return nil
+	}
+
+	dl := downloader.HTTPDownloader{
+		Timeout: 5 * time.Minute,
+		Retries: 3,
+	}
+
+	return dl.Fetch(context.Background(), artifact)
 }
 
 // execRemove deletes only owned paths.
@@ -65,4 +88,14 @@ func (e FSExecutor) execRemove(p plan.RemovePlan) error {
 	}
 
 	return nil
+}
+
+// burpDownloadURL constructs the download URL for a Burp Suite release.
+// Temporary duplication - will be refactored to use product module.
+func burpDownloadURL(edition string) string {
+	product := "pro"
+	if edition == "community" {
+		product = "community"
+	}
+	return "https://portswigger-cdn.net/burp/releases/download?product=" + product + "&type=Jar"
 }
