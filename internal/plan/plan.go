@@ -36,3 +36,13 @@ func FromResolved(p paths.Paths) Paths {
 		CacheDir:   p.CacheDir,
 	}
 }
+
+// Owned returns paths that relay owns and can safely modify/delete.
+// Excludes ConfigDir to preserve user configuration on uninstall.
+func (p Paths) Owned() []string {
+	return []string{
+		p.InstallDir,
+		p.DataDir,
+		p.CacheDir,
+	}
+}
