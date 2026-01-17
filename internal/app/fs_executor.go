@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/sdmrf/relay/internal/downloader"
@@ -19,14 +18,16 @@ type FSExecutor struct {
 }
 
 // Execute dispatches to the appropriate handler based on plan type.
-func (e FSExecutor) Execute(p plan.Plan) error {
+func (e FSExecutor) Execute(ctx context.Context, p plan.Plan) error {
 	switch p := p.(type) {
 	case plan.InstallPlan:
-		return e.execInstall(p)
+		return e.execInstall(ctx, p)
 	case plan.RemovePlan:
 		return e.execRemove(p)
 	case plan.LaunchPlan:
-		return e.execLaunch(p)
+		return e.execLaunch(ctx, p)
+	case plan.UpdatePlan:
+		return e.execUpdate(ctx, p)
 	default:
 		return fmt.Errorf("unsupported plan kind: %s", p.Kind())
 	}
@@ -34,7 +35,7 @@ func (e FSExecutor) Execute(p plan.Plan) error {
 
 // execInstall creates required directories and downloads artifacts.
 // Uses MkdirAll for idempotency - safe to run multiple times.
-func (e FSExecutor) execInstall(p plan.InstallPlan) error {
+func (e FSExecutor) execInstall(ctx context.Context, p plan.InstallPlan) error {
 	dirs := []string{
 		p.Paths.InstallDir,
 		p.Paths.DataDir,
@@ -53,11 +54,10 @@ func (e FSExecutor) execInstall(p plan.InstallPlan) error {
 		}
 	}
 
-	// Download artifact
 	artifact := downloader.Artifact{
-		Name:   "burpsuite.jar",
-		URL:    burpDownloadURL(p.Edition),
-		Target: filepath.Join(p.Paths.InstallDir, "burpsuite.jar"),
+		Name:   p.Artifact.Name,
+		URL:    p.Artifact.URL,
+		Target: p.Artifact.Target,
 	}
 
 	if e.DryRun {
@@ -72,7 +72,7 @@ func (e FSExecutor) execInstall(p plan.InstallPlan) error {
 		Retries: 3,
 	}
 
-	return dl.Fetch(context.Background(), artifact)
+	return dl.Fetch(ctx, artifact)
 }
 
 // execRemove deletes only owned paths.
@@ -93,7 +93,7 @@ func (e FSExecutor) execRemove(p plan.RemovePlan) error {
 }
 
 // execLaunch validates Java, generates the launcher, and runs it.
-func (e FSExecutor) execLaunch(p plan.LaunchPlan) error {
+func (e FSExecutor) execLaunch(ctx context.Context, p plan.LaunchPlan) error {
 	gen, err := launcher.New(p)
 	if err != nil {
 		return fmt.Errorf("create launcher: %w", err)
@@ -118,15 +118,29 @@ func (e FSExecutor) execLaunch(p plan.LaunchPlan) error {
 
 	// Run the launcher
 	runner := runtime.ExecRunner{}
-	return runner.Run(context.Background(), gen.Path())
+	return runner.Run(ctx, gen.Path())
 }
 
-// burpDownloadURL constructs the download URL for a Burp Suite release.
-// Temporary duplication - will be refactored to use product module.
-func burpDownloadURL(edition string) string {
-	product := "pro"
-	if edition == "community" {
-		product = "community"
+// execUpdate downloads the new version, replacing the existing JAR.
+func (e FSExecutor) execUpdate(ctx context.Context, p plan.UpdatePlan) error {
+	artifact := downloader.Artifact{
+		Name:   p.Artifact.Name,
+		URL:    p.Artifact.URL,
+		Target: p.Artifact.Target,
 	}
-	return "https://portswigger-cdn.net/burp/releases/download?product=" + product + "&type=Jar"
+
+	if e.DryRun {
+		fmt.Printf("[dry-run] update %s -> %s\n", p.CurrentVersion, p.TargetVersion)
+		fmt.Println("[dry-run] download:", artifact.Name)
+		fmt.Println("[dry-run]   url:", artifact.URL)
+		fmt.Println("[dry-run]   target:", artifact.Target)
+		return nil
+	}
+
+	dl := downloader.HTTPDownloader{
+		Timeout: 5 * time.Minute,
+		Retries: 3,
+	}
+
+	return dl.Fetch(ctx, artifact)
 }

@@ -1,6 +1,13 @@
 package burpsuite
 
-const baseURL = "https://portswigger-cdn.net/burp/releases/download"
+// Burp Suite constants
+const (
+	// JarName is the name of the Burp Suite JAR file.
+	JarName = "burpsuite.jar"
+
+	// baseURL is the PortSwigger CDN base URL for downloads.
+	baseURL = "https://portswigger-cdn.net/burp/releases/download"
+)
 
 // burpDownloadURL constructs the download URL for a Burp Suite release.
 // Downloads latest version - version parameter not needed.

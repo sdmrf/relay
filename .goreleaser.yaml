@@ -1,0 +1,93 @@
+version: 2
+
+project_name: relay
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: relay
+    main: ./cmd/relay
+    binary: relay
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/sdmrf/relay/pkg/version.Version={{.Version}}
+      - -X github.com/sdmrf/relay/pkg/version.Commit={{.Commit}}
+      - -X github.com/sdmrf/relay/pkg/version.BuildDate={{.Date}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE*
+      - docs/*
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: sdmrf
+    name: relay
+  draft: false
+  prerelease: auto
+  name_template: "{{.ProjectName}} v{{.Version}}"
+
+brews:
+  - name: relay
+    repository:
+      owner: sdmrf
+      name: homebrew-tap
+    homepage: "https://github.com/sdmrf/relay"
+    description: "A modern CLI for managing Burp Suite installations"
+    license: "MIT"
+    skip_upload: auto
+    install: |
+      bin.install "relay"
+
+nfpms:
+  - id: packages
+    package_name: relay
+    vendor: sdmrf
+    homepage: https://github.com/sdmrf/relay
+    maintainer: SDMRF <sdmrf@users.noreply.github.com>
+    description: A modern CLI for managing Burp Suite installations
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
