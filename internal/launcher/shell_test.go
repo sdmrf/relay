@@ -10,7 +10,7 @@ import (
 )
 
 func TestShellLauncherPath(t *testing.T) {
-	s := ShellLauncher{BinDir: "/usr/local/bin"}
+	s := ShellLauncher{BinDir: "/usr/local/bin", JavaPath: "/usr/bin/java"}
 
 	want := "/usr/local/bin/burpsuite"
 	if got := s.Path(); got != want {
@@ -26,7 +26,7 @@ func TestShellLauncherGenerate(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	s := ShellLauncher{BinDir: tmpDir}
+	s := ShellLauncher{BinDir: tmpDir, JavaPath: "/usr/bin/java"}
 
 	p := plan.LaunchPlan{
 		Product: "burpsuite",
@@ -54,9 +54,9 @@ func TestShellLauncherGenerate(t *testing.T) {
 		t.Error("launcher script should start with #!/bin/sh")
 	}
 
-	// Verify exec java
-	if !strings.Contains(script, "exec java") {
-		t.Error("launcher script should contain 'exec java'")
+	// Verify exec with java path
+	if !strings.Contains(script, `exec "/usr/bin/java"`) {
+		t.Errorf("launcher script should contain 'exec \"/usr/bin/java\"', got: %s", script)
 	}
 
 	// Verify JVM args
@@ -96,7 +96,7 @@ func TestShellLauncherGenerateEmptyJVMArgs(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	s := ShellLauncher{BinDir: tmpDir}
+	s := ShellLauncher{BinDir: tmpDir, JavaPath: "/usr/bin/java"}
 
 	p := plan.LaunchPlan{
 		Product: "burpsuite",
@@ -122,8 +122,8 @@ func TestShellLauncherGenerateEmptyJVMArgs(t *testing.T) {
 	if !strings.HasPrefix(script, "#!/bin/sh") {
 		t.Error("launcher script should start with #!/bin/sh")
 	}
-	if !strings.Contains(script, "exec java") {
-		t.Error("launcher script should contain 'exec java'")
+	if !strings.Contains(script, `exec "/usr/bin/java"`) {
+		t.Errorf("launcher script should contain 'exec \"/usr/bin/java\"', got: %s", script)
 	}
 	if !strings.Contains(script, "-jar") {
 		t.Error("launcher script should contain '-jar'")
@@ -138,7 +138,7 @@ func TestNewLauncher(t *testing.T) {
 		},
 	}
 
-	gen, err := New(p)
+	gen, err := New(p, "/usr/bin/java")
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}

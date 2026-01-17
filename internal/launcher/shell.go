@@ -10,12 +10,13 @@ import (
 )
 
 const shellTemplate = `#!/bin/sh
-exec java {{range .JVMArgs}}{{.}} {{end}}-jar "{{.JarPath}}" "$@" &
+exec "{{.JavaPath}}" {{range .JVMArgs}}{{.}} {{end}}-jar "{{.JarPath}}" "$@" &
 `
 
 // ShellLauncher generates shell scripts for Linux/macOS.
 type ShellLauncher struct {
-	BinDir string
+	BinDir   string
+	JavaPath string
 }
 
 func (s ShellLauncher) Path() string {
@@ -35,11 +36,13 @@ func (s ShellLauncher) Generate(p plan.LaunchPlan) error {
 	defer f.Close()
 
 	data := struct {
-		JVMArgs []string
-		JarPath string
+		JavaPath string
+		JVMArgs  []string
+		JarPath  string
 	}{
-		JVMArgs: p.JVMArgs,
-		JarPath: filepath.Join(p.Paths.InstallDir, "burpsuite.jar"),
+		JavaPath: s.JavaPath,
+		JVMArgs:  p.JVMArgs,
+		JarPath:  filepath.Join(p.Paths.InstallDir, "burpsuite.jar"),
 	}
 
 	if err := t.Execute(f, data); err != nil {
