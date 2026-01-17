@@ -10,7 +10,7 @@ func Default() Config {
 			Version: "latest",
 		},
 		Layout: LayoutConfig{
-			Mode: SystemLayout,
+			Mode: "system",
 		},
 		Paths: PathsConfig{
 			Install: "auto",
@@ -19,7 +19,7 @@ func Default() Config {
 		},
 		Runtime: RuntimeConfig{
 			Java: JavaConfig{
-				Strategy:   JavaStrategyAuto,
+				Strategy:   "auto",
 				MinVersion: 17,
 				JVMArgs: []string{
 					"--add-opens=java.desktop/javax.swing=ALL-UNNAMED",
@@ -33,7 +33,7 @@ func Default() Config {
 			Retries: 3,
 		},
 		Logging: LoggingConfig{
-			Level: LogLevelInfo,
+			Level: "info",
 		},
 	}
 }
