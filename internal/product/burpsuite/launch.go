@@ -10,5 +10,6 @@ func (b *BurpSuite) ResolveLaunch() (plan.LaunchPlan, error) {
 		Version: b.cfg.Product.Version,
 		Paths:   plan.FromResolved(b.paths),
 		JVMArgs: b.cfg.Runtime.Java.JVMArgs,
+		JavaMin: b.cfg.Runtime.Java.MinVersion,
 	}, nil
 }

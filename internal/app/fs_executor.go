@@ -10,6 +10,7 @@ import (
 	"github.com/sdmrf/relay/internal/downloader"
 	"github.com/sdmrf/relay/internal/launcher"
 	"github.com/sdmrf/relay/internal/plan"
+	"github.com/sdmrf/relay/internal/runtime"
 )
 
 // FSExecutor executes plans by performing filesystem operations.
@@ -91,8 +92,7 @@ func (e FSExecutor) execRemove(p plan.RemovePlan) error {
 	return nil
 }
 
-// execLaunch generates a platform-specific launcher script.
-// Does not run Burp - only creates the launcher.
+// execLaunch validates Java, generates the launcher, and runs it.
 func (e FSExecutor) execLaunch(p plan.LaunchPlan) error {
 	gen, err := launcher.New(p)
 	if err != nil {
@@ -100,11 +100,25 @@ func (e FSExecutor) execLaunch(p plan.LaunchPlan) error {
 	}
 
 	if e.DryRun {
+		fmt.Printf("[dry-run] validate java %d+\n", p.JavaMin)
 		fmt.Println("[dry-run] generate launcher:", gen.Path())
+		fmt.Println("[dry-run] run launcher:", gen.Path())
 		return nil
 	}
 
-	return gen.Generate(p)
+	// Validate Java version
+	if _, err := runtime.ValidateJava(p.JavaMin); err != nil {
+		return fmt.Errorf("java validation: %w", err)
+	}
+
+	// Generate the launcher script
+	if err := gen.Generate(p); err != nil {
+		return fmt.Errorf("generate launcher: %w", err)
+	}
+
+	// Run the launcher
+	runner := runtime.ExecRunner{}
+	return runner.Run(context.Background(), gen.Path())
 }
 
 // burpDownloadURL constructs the download URL for a Burp Suite release.
