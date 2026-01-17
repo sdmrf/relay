@@ -8,34 +8,57 @@ import (
 	"strings"
 )
 
+// JavaInfo contains information about a Java installation.
+type JavaInfo struct {
+	Version int
+	Path    string
+	Output  string
+}
+
 // ValidateJava checks that Java is installed and meets minimum version.
 // Returns the version output on success.
 func ValidateJava(minVersion int) (string, error) {
+	info, err := GetJavaInfo()
+	if err != nil {
+		return "", err
+	}
+
+	if info.Version < minVersion {
+		return "", fmt.Errorf("java %d+ required, found %d", minVersion, info.Version)
+	}
+
+	return info.Output, nil
+}
+
+// GetJavaInfo retrieves information about the installed Java.
+func GetJavaInfo() (JavaInfo, error) {
 	cmd := exec.Command("java", "-version")
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("java not found in PATH")
+		return JavaInfo{}, fmt.Errorf("java not found in PATH")
 	}
 
-	out := stderr.String()
+	output := stderr.String()
 
-	version, err := parseJavaVersion(out)
+	version, err := ParseJavaVersion(output)
 	if err != nil {
-		return "", err
+		return JavaInfo{}, err
 	}
 
-	if version < minVersion {
-		return "", fmt.Errorf("java %d+ required, found %d", minVersion, version)
-	}
+	path := getJavaPath()
 
-	return out, nil
+	return JavaInfo{
+		Version: version,
+		Path:    path,
+		Output:  output,
+	}, nil
 }
 
-// parseJavaVersion extracts the major version number from java -version output.
-func parseJavaVersion(output string) (int, error) {
+// ParseJavaVersion extracts the major version number from java -version output.
+func ParseJavaVersion(output string) (int, error) {
 	// Handles formats:
 	// - java version "17.0.8"
 	// - openjdk version "21.0.1"
@@ -59,4 +82,14 @@ func parseJavaVersion(output string) (int, error) {
 	}
 
 	return strconv.Atoi(parts[0])
+}
+
+// getJavaPath attempts to find the java executable path.
+func getJavaPath() string {
+	cmd := exec.Command("which", "java")
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }

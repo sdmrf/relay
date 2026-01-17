@@ -8,4 +8,5 @@ type Product interface {
 	Name() string
 	ResolveInstall() (plan.InstallPlan, error)
 	ResolveLaunch() (plan.LaunchPlan, error)
+	ResolveRemove() (plan.RemovePlan, error)
 }
