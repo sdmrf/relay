@@ -1,5 +1,11 @@
 package main
 
+import (
+	"fmt"
+	"os"
+)
+
 func main() {
-	Execute()
+	fmt.Println("relay: not implemented yet")
+	os.Exit(0)
 }
