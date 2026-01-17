@@ -34,21 +34,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	exec := app.FSExecutor{DryRun: false}
+	exec := app.FSExecutor{DryRun: true}
 
-	// Test install plan
-	installPlan, err := burp.ResolveInstall()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	if err := exec.Execute(installPlan); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	// Test launch plan
+	// Test launch plan (includes Java validation)
 	launchPlan, err := burp.ResolveLaunch()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
