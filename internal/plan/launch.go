@@ -7,7 +7,6 @@ type LaunchPlan struct {
 	Version string
 	Paths   Paths
 	JVMArgs []string
-	JavaMin int
 }
 
 func (p LaunchPlan) Kind() Kind {
