@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sdmrf/relay/internal/downloader"
+	"github.com/sdmrf/relay/internal/launcher"
 	"github.com/sdmrf/relay/internal/plan"
 )
 
@@ -24,7 +25,7 @@ func (e FSExecutor) Execute(p plan.Plan) error {
 	case plan.RemovePlan:
 		return e.execRemove(p)
 	case plan.LaunchPlan:
-		return fmt.Errorf("launch execution not yet implemented")
+		return e.execLaunch(p)
 	default:
 		return fmt.Errorf("unsupported plan kind: %s", p.Kind())
 	}
@@ -88,6 +89,22 @@ func (e FSExecutor) execRemove(p plan.RemovePlan) error {
 	}
 
 	return nil
+}
+
+// execLaunch generates a platform-specific launcher script.
+// Does not run Burp - only creates the launcher.
+func (e FSExecutor) execLaunch(p plan.LaunchPlan) error {
+	gen, err := launcher.New(p)
+	if err != nil {
+		return fmt.Errorf("create launcher: %w", err)
+	}
+
+	if e.DryRun {
+		fmt.Println("[dry-run] generate launcher:", gen.Path())
+		return nil
+	}
+
+	return gen.Generate(p)
 }
 
 // burpDownloadURL constructs the download URL for a Burp Suite release.
