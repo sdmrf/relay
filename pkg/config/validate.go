@@ -14,13 +14,13 @@ func (c Config) Validate() error {
 	}
 
 	switch c.Layout.Mode {
-	case "system", "portable":
+	case SystemLayout, PortableLayout:
 	default:
 		return fmt.Errorf("invalid layout.mode: %s", c.Layout.Mode)
 	}
 
 	switch c.Runtime.Java.Strategy {
-	case "auto", "system":
+	case JavaStrategyAuto, JavaStrategySystem:
 	default:
 		return fmt.Errorf("invalid runtime.java.strategy: %s", c.Runtime.Java.Strategy)
 	}
@@ -30,7 +30,7 @@ func (c Config) Validate() error {
 	}
 
 	switch c.Logging.Level {
-	case "info", "debug", "trace":
+	case LogLevelInfo, LogLevelDebug, LogLevelTrace:
 	default:
 		return fmt.Errorf("invalid logging.level: %s", c.Logging.Level)
 	}

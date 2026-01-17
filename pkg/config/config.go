@@ -2,13 +2,35 @@ package config
 
 import "time"
 
+type LayoutMode string
+
+const (
+	SystemLayout   LayoutMode = "system"
+	PortableLayout LayoutMode = "portable"
+)
+
+type JavaStrategy string
+
+const (
+	JavaStrategyAuto   JavaStrategy = "auto"
+	JavaStrategySystem JavaStrategy = "system"
+)
+
+type LogLevel string
+
+const (
+	LogLevelInfo  LogLevel = "info"
+	LogLevelDebug LogLevel = "debug"
+	LogLevelTrace LogLevel = "trace"
+)
+
 type Config struct {
-	Product  ProductConfig  `yaml:"product"`
-	Layout   LayoutConfig   `yaml:"layout"`
-	Paths    PathsConfig    `yaml:"paths"`
-	Runtime  RuntimeConfig  `yaml:"runtime"`
-	Network  NetworkConfig  `yaml:"network"`
-	Logging  LoggingConfig  `yaml:"logging"`
+	Product ProductConfig `yaml:"product"`
+	Layout  LayoutConfig  `yaml:"layout"`
+	Paths   PathsConfig   `yaml:"paths"`
+	Runtime RuntimeConfig `yaml:"runtime"`
+	Network NetworkConfig `yaml:"network"`
+	Logging LoggingConfig `yaml:"logging"`
 }
 
 type ProductConfig struct {
@@ -18,7 +40,7 @@ type ProductConfig struct {
 }
 
 type LayoutConfig struct {
-	Mode string `yaml:"mode"`
+	Mode LayoutMode `yaml:"mode"`
 }
 
 type PathsConfig struct {
@@ -32,9 +54,9 @@ type RuntimeConfig struct {
 }
 
 type JavaConfig struct {
-	Strategy   string   `yaml:"strategy"`
-	MinVersion int      `yaml:"min_version"`
-	JVMArgs    []string `yaml:"jvm_args"`
+	Strategy   JavaStrategy `yaml:"strategy"`
+	MinVersion int          `yaml:"min_version"`
+	JVMArgs    []string     `yaml:"jvm_args"`
 }
 
 type NetworkConfig struct {
@@ -43,5 +65,5 @@ type NetworkConfig struct {
 }
 
 type LoggingConfig struct {
-	Level string `yaml:"level"`
+	Level LogLevel `yaml:"level"`
 }
