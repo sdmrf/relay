@@ -31,24 +31,33 @@ func Resolve(opts Options) (Paths, error) {
 }
 
 func resolveSystem(os OS, configDir, cacheDir string, opts Options) (Paths, error) {
-	var install, data, bin string
+	home, err := osUserHome()
+	if err != nil {
+		return Paths{}, err
+	}
+
+	var install, data string
 
 	switch os {
 	case Linux:
-		install = "/usr/lib/relay"
-		data = "/var/lib/relay"
-		bin = "/usr/bin"
+		// User-writable locations
+		install = filepath.Join(home, ".local", "share", "relay")
+		data = filepath.Join(home, ".local", "share", "relay", "data")
 	case Darwin:
-		install = "/Applications/relay"
-		data = "/Library/Application Support/relay"
-		bin = "/usr/local/bin"
+		// User-writable locations in ~/Library
+		install = filepath.Join(home, "Library", "Application Support", "relay")
+		data = filepath.Join(home, "Library", "Application Support", "relay", "data")
 	case Windows:
-		install = `C:\Program Files\relay`
-		data = `C:\ProgramData\relay`
-		bin = `C:\Program Files\relay\bin`
+		// User's local app data
+		localAppData := filepath.Join(home, "AppData", "Local")
+		install = filepath.Join(localAppData, "relay")
+		data = filepath.Join(localAppData, "relay", "data")
 	default:
 		return Paths{}, fmt.Errorf("unsupported OS: %s", os)
 	}
+
+	// Bin directory inside install dir - no sudo needed for launcher
+	bin := filepath.Join(install, "bin")
 
 	return Paths{
 		InstallDir: install,

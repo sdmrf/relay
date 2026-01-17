@@ -12,8 +12,9 @@ const (
 type JavaStrategy string
 
 const (
-	JavaStrategyAuto   JavaStrategy = "auto"
-	JavaStrategySystem JavaStrategy = "system"
+	JavaStrategyAuto    JavaStrategy = "auto"    // Prefer bundled, fallback to system
+	JavaStrategySystem  JavaStrategy = "system"  // Only use system Java
+	JavaStrategyBundled JavaStrategy = "bundled" // Only use bundled JRE
 )
 
 type LogLevel string

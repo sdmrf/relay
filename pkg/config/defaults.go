@@ -22,9 +22,23 @@ func Default() Config {
 				Strategy:   JavaStrategyAuto,
 				MinVersion: 17,
 				JVMArgs: []string{
+					// Memory settings
+					"-Xmx4g",
+					"-Xms1g",
+					// Modern G1 garbage collector (default in JDK 17+, explicit for clarity)
+					"-XX:+UseG1GC",
+					"-XX:+UseStringDeduplication",
+					"-XX:MaxGCPauseMillis=100",
+					// Required module access for Burp Suite GUI
 					"--add-opens=java.desktop/javax.swing=ALL-UNNAMED",
+					"--add-opens=java.desktop/java.awt=ALL-UNNAMED",
+					"--add-opens=java.desktop/java.awt.event=ALL-UNNAMED",
 					"--add-opens=java.base/java.lang=ALL-UNNAMED",
-					"-noverify",
+					"--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+					"--add-opens=java.base/java.io=ALL-UNNAMED",
+					"--add-opens=java.base/java.util=ALL-UNNAMED",
+					"--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
+					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
 				},
 			},
 		},
